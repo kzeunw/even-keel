@@ -4,14 +4,18 @@ A small daily journal that runs in your phone's browser. Each day you rate four 
 
 - **Diet**: how clean you ate
 - **Sleep**: how rested you were
-- **Fatigue**: how much malaise you felt
+- **Energy**: from drained (1) to energetic (4)
 - **Mood**: self-esteem and general mood
-- **Exercise**: none, home workout, cardio, or both
+- **Exercise**: home workout, cardio, or both (leave it unselected for none)
 - **Piano**: practised or not
 
 You can also list what you ate. Each entry is sent to Google's Gemini, which estimates its nutrients, and the day's totals are shown against your daily goals, along with the potassium to sodium ratio (target 2.5 : 1).
 
-The Patterns tab shows streaks, the last four weeks at a glance, and which of your numbers tend to move together.
+The Patterns tab shows highlights (your logging streak, your best day, and this week's piano and exercise days), the last two weeks at a glance, and which of your numbers tend to move together.
+
+The best day is the one with the highest score: the average of the four ratings, plus 1 point for piano and 1 point for any exercise, out of 6.
+
+The Settings tab holds the Gemini API key and your daily nutrient goals.
 
 ## Files
 
@@ -35,7 +39,7 @@ There is nothing to install or build.
 
 1. Open the address above in Chrome on Android.
 2. Open Chrome's menu and choose **Add to Home screen**.
-3. In the app, open the **Gemini** section at the bottom of the food log and paste an API key. Create one at <https://aistudio.google.com/apikey>.
+3. In the app, open the **Settings** tab and paste an API key into the **Gemini** section. Create one at <https://aistudio.google.com/apikey>.
 
 The model name next to the key can be changed if Google retires the default one.
 
@@ -49,6 +53,6 @@ The model name next to the key can be changed if Google retires the default one.
 
 ## Daily goals
 
-Each nutrient has a standard daily goal taken from the FDA Daily Values. Open **Daily goals** in the food log to set your own for any of them. Carbs, fat, saturated fat and added sugar follow your calorie goal unless you set them yourself.
+Each nutrient has a standard daily goal taken from the FDA Daily Values. Open **Daily goals** in the Settings tab to set your own for any of them. Carbs, fat, saturated fat and added sugar follow your calorie goal unless you set them yourself.
 
 Nutrient amounts are AI estimates from your description, not lab values.

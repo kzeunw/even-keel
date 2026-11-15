@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#f2f4f7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0e1217" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="description" content="A small daily journal for diet, sleep, fatigue, mood, exercise and piano practice, with a food log and pattern detection.">
+<meta name="description" content="A small daily journal for diet, sleep, energy, mood, exercise and piano practice, with a food log and pattern detection.">
 <title>Even Keel</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icon-192.png">
@@ -65,7 +65,7 @@ ul{list-style:none}
 h1{font:700 22px/1.1 var(--font-display);letter-spacing:-.01em}
 .sync{font-size:12px;color:var(--muted);white-space:nowrap}
 
-.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
 .tabs button{height:36px;border-radius:8px;font-weight:600;color:var(--muted)}
 .tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
 
@@ -96,13 +96,13 @@ h2 small{font:400 12px/1.2 var(--font-body);letter-spacing:0;text-transform:none
 .anchors{grid-column:2;display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:3px}
 .piano{height:44px;width:100%;border-radius:9px;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;color:var(--muted)}
 .piano[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:transparent}
-.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .seg button{height:44px;min-width:0;border-radius:9px;background:var(--bg);border:1px solid var(--line);font-weight:600;font-size:13px;color:var(--muted)}
 .seg button[aria-checked="true"]{background:var(--ink);color:var(--bg);border-color:transparent}
 
 /* food */
 .food-form{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:stretch}
-.food-form textarea{font-size:16px;min-width:0;resize:vertical;min-height:48px;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--bg)}
+.food-form textarea{font-size:16px;min-width:0;resize:none;min-height:48px;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--bg)}
 .food-form textarea::placeholder{color:var(--muted)}
 .btn{padding:0 16px;min-height:44px;border-radius:9px;background:var(--accent);color:var(--on-accent);font-weight:700}
 .btn:disabled{opacity:.5;cursor:default}
@@ -134,12 +134,12 @@ summary{cursor:pointer;font-weight:600;font-size:13.5px;min-height:28px;display:
 summary::-webkit-details-marker{display:none}
 summary::after{content:"+";font-size:18px;color:var(--muted);font-weight:400}
 details[open] > summary::after{content:"\2212"}
-details > .nuts,details > .prefs{margin-top:10px}
+details > .nuts{margin-top:10px}
 .prefs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .prefs label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
 .prefs select,.prefs input{font-size:16px;height:44px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:0;width:100%}
 .prefs p{grid-column:1/-1}
-details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
+.panel > .btn-quiet{align-self:flex-start}
 .goals{display:flex;flex-direction:column;gap:6px}
 .goal{display:grid;grid-template-columns:1fr 104px 54px;column-gap:8px;align-items:center;font-size:13.5px}
 .goal input{font-size:16px;height:40px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:0;width:100%;text-align:right;font-variant-numeric:tabular-nums}
@@ -148,18 +148,18 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
 
 /* patterns */
 .banner{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border:1px dashed var(--muted);border-radius:12px;font-size:13.5px;font-weight:600}
-.streaks{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 10px}
-.streaks dt{font:700 26px/1 var(--font-display);font-variant-numeric:tabular-nums}
-.streaks dt span{font:500 14px/1 var(--font-body);color:var(--muted)}
-.streaks dd{font-size:12px;color:var(--muted);margin-top:4px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:14px 10px}
+.stats dt{font:700 26px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.stats dt span{font:500 14px/1 var(--font-body);color:var(--muted)}
+.stats dd{font-size:12px;color:var(--muted);margin-top:4px}
 .strip{display:grid;grid-template-columns:auto 1fr auto;column-gap:10px;align-items:start}
 .strip-labels,.strip-avgs{display:flex;flex-direction:column;gap:3px;font-size:12px}
-.strip-labels div,.strip-avgs div{height:18px;line-height:18px}
+.strip-labels div,.strip-avgs div{height:22px;line-height:22px}
 .strip-avgs div{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 .strip-avgs span{color:var(--muted);font-weight:400}
 .plot{position:relative;display:flex;flex-direction:column;gap:3px;touch-action:pan-y;cursor:pointer;border-radius:4px;min-width:0}
-.cells{display:grid;grid-template-columns:repeat(28,1fr);gap:2px}
-.cell{height:18px;border-radius:2px;background:var(--cell-empty)}
+.cells{display:grid;grid-template-columns:repeat(14,1fr);gap:3px}
+.cell{height:22px;border-radius:3px;background:var(--cell-empty)}
 .cell[data-v="1"]{background:var(--r1)}.cell[data-v="2"]{background:var(--r2)}.cell[data-v="3"]{background:var(--r3)}
 .cell[data-v="4"]{background:var(--r4)}
 .cell[data-v="on"]{background:var(--ink)}
@@ -169,9 +169,12 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
 .legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;font-size:12px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:4px}
 .legend i{width:12px;height:12px;border-radius:2px;display:inline-block}
-.strip-note{font-size:12px}
-.day-detail{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13.5px;border-top:1px solid var(--line);padding-top:10px}
-.day-detail b{font-weight:600}
+.day-detail{display:flex;flex-direction:column;gap:8px;font-size:13.5px;border-top:1px solid var(--line);padding-top:10px}
+.day-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.day-head b{font-weight:600}
+.day-rows{display:grid;grid-template-columns:auto 1fr;gap:4px 16px}
+.day-rows dt{color:var(--muted)}
+.day-rows dd{font-weight:600;font-variant-numeric:tabular-nums}
 .links{display:flex;flex-direction:column}
 .link{padding-block:9px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
 .link:first-child{border-top:0;padding-top:0}
@@ -194,7 +197,9 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
 
   <div class="tabs" role="tablist" aria-label="Views">
     <button type="button" role="tab" id="tab-log" aria-controls="view-log" aria-selected="true">Log</button>
-    <button type="button" role="tab" id="tab-patterns" aria-controls="view-patterns" aria-selected="false">Patterns</button>  </div>
+    <button type="button" role="tab" id="tab-patterns" aria-controls="view-patterns" aria-selected="false">Patterns</button>
+    <button type="button" role="tab" id="tab-settings" aria-controls="view-settings" aria-selected="false">Settings</button>
+  </div>
 
   <main>
     <div class="view" id="view-log" role="tabpanel" aria-labelledby="tab-log">
@@ -218,24 +223,6 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
         <p class="hint" id="food-note"></p>
         <ul class="meals" id="meals"></ul>
         <div id="nutrients"></div>
-        <details id="gem">
-          <summary id="gem-summary">Gemini</summary>
-          <div class="prefs">
-            <label for="gem-key">Gemini API key
-              <input id="gem-key" type="password" autocomplete="off" spellcheck="false">
-            </label>
-            <label for="gem-model">Model
-              <input id="gem-model" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
-            </label>
-            <p class="hint">Create a key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. The key is stored only in this browser and sent only to Google. What you type into the food log is sent to Google for analysis.</p>
-          </div>
-        </details>
-        <details id="goals">
-          <summary id="goals-summary">Daily goals</summary>
-          <div class="goals" id="goals-list"></div>
-          <p class="hint">Leave a box empty to use the standard goal shown in grey (FDA Daily Values). Carbs, fat, saturated fat and added sugar follow your calorie goal unless you set them yourself. Nutrient amounts are AI estimates, not lab values.</p>
-          <button type="button" class="btn-quiet" id="goals-reset" hidden>Reset all to standard</button>
-        </details>
       </section>
     </div>
 
@@ -245,16 +232,17 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
         <button type="button" class="btn-quiet" id="example-off">Hide example</button>
       </div>
 
-      <section class="panel" aria-labelledby="streak-h">
-        <h2 id="streak-h">Streaks</h2>
-        <dl class="streaks" id="streaks"></dl>
+      <section class="panel" aria-labelledby="stats-h">
+        <h2 id="stats-h">Highlights</h2>
+        <dl class="stats" id="stats"></dl>
+        <p class="hint">Best day: the average of the four ratings, plus 1 for piano and 1 for any exercise.</p>
       </section>
 
       <section class="panel" aria-labelledby="strip-h">
-        <h2 id="strip-h">Last 4 weeks <small>7-day avg</small></h2>
+        <h2 id="strip-h">Last 2 weeks <small>7-day avg</small></h2>
         <div class="strip">
           <div class="strip-labels" id="strip-labels"></div>
-          <div class="plot" id="plot" tabindex="0" role="group" aria-label="Daily values for the last 28 days. Use left and right arrow keys to pick a day."></div>
+          <div class="plot" id="plot" tabindex="0" role="group" aria-label="Daily values for the last 14 days. Use left and right arrow keys to pick a day."></div>
           <div class="strip-avgs" id="strip-avgs"></div>
           <div class="axis" id="axis"></div>
         </div>
@@ -263,10 +251,12 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
           <span><i style="background:var(--ink)"></i> done</span>
           <span><i style="background:var(--cell-empty)"></i> no entry</span>
         </div>
-        <p class="hint strip-note">K : Na is potassium to sodium from your food log, on the same scale: 4 means 2.5 : 1 or higher.</p>
         <div class="day-detail" aria-live="polite">
-          <span id="day-detail"></span>
-          <button type="button" class="btn-quiet" id="open-day">Open</button>
+          <div class="day-head">
+            <b id="day-name"></b>
+            <button type="button" class="btn-quiet" id="open-day">Open</button>
+          </div>
+          <dl class="day-rows" id="day-detail"></dl>
         </div>
       </section>
 
@@ -283,6 +273,28 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
         <input type="file" id="restore-file" accept="application/json,.json" aria-label="Backup file" hidden>
         <p class="hint" id="backup-note">Your journal lives only in this browser on this device. Download a backup now and then.</p>
       </div>    </div>
+
+    <div class="view" id="view-settings" role="tabpanel" aria-labelledby="tab-settings" hidden>
+      <section class="panel" id="gem" aria-labelledby="gem-h">
+        <h2 id="gem-h">Gemini <small id="gem-summary"></small></h2>
+        <div class="prefs">
+          <label for="gem-key">Gemini API key
+            <input id="gem-key" type="password" autocomplete="off" spellcheck="false">
+          </label>
+          <label for="gem-model">Model
+            <input id="gem-model" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+          </label>
+          <p class="hint">Create a key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. The key is stored only in this browser and sent only to Google. What you type into the food log is sent to Google for analysis.</p>
+        </div>
+      </section>
+
+      <section class="panel" id="goals" aria-labelledby="goals-h">
+        <h2 id="goals-h">Daily goals <small id="goals-summary"></small></h2>
+        <div class="goals" id="goals-list"></div>
+        <p class="hint">Leave a box empty to use the standard goal shown in grey (FDA Daily Values). Carbs, fat, saturated fat and added sugar follow your calorie goal unless you set them yourself. Nutrient amounts are AI estimates, not lab values.</p>
+        <button type="button" class="btn-quiet" id="goals-reset" hidden>Reset all to standard</button>
+      </section>
+    </div>
   </main>
 </div>
 
@@ -299,21 +311,21 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
   var RATINGS = [
     { k: 'diet', name: 'Diet', lo: 'junk', hi: 'clean' },
     { k: 'sleep', name: 'Sleep', lo: 'poor', hi: 'rested' },
-    { k: 'fatigue', name: 'Fatigue', lo: 'none', hi: 'heavy' },
+    { k: 'energy', name: 'Energy', lo: 'drained', hi: 'energetic' },
     { k: 'mood', name: 'Mood', lo: 'low', hi: 'great' }
   ];
   var EXERCISE = [
-    { k: 'none', short: 'None', name: 'No exercise', text: 'none' },
-    { k: 'home', short: 'Home', name: 'Home workout', text: 'home workout' },
-    { k: 'cardio', short: 'Cardio', name: 'Cardio', text: 'cardio' },
-    { k: 'both', short: 'Both', name: 'Home workout and cardio', text: 'both' }
+    { k: 'home', short: 'Home', name: 'Home workout', text: 'Home workout' },
+    { k: 'cardio', short: 'Cardio', name: 'Cardio', text: 'Cardio' },
+    { k: 'both', short: 'Both', name: 'Home workout and cardio', text: 'Both' }
   ];
+  // No choice means no exercise that day. A 'none' saved by an earlier version reads the same way.
   var EX_TEXT = {};
   EXERCISE.forEach(function (x) { EX_TEXT[x.k] = x.text; });
   // Rows of the patterns view. kna = potassium to sodium ratio from the food log;
   // workout and cardio are the two halves of the exercise choice.
-  var KEYS = ['diet', 'sleep', 'fatigue', 'mood', 'kna', 'workout', 'cardio', 'piano'];
-  var NAMES = { diet: 'Diet', sleep: 'Sleep', fatigue: 'Fatigue', mood: 'Mood', kna: 'K : Na', workout: 'Workout', cardio: 'Cardio', piano: 'Piano' };
+  var KEYS = ['diet', 'sleep', 'energy', 'mood', 'kna', 'workout', 'cardio', 'piano'];
+  var NAMES = { diet: 'Diet', sleep: 'Sleep', energy: 'Energy', mood: 'Mood', kna: 'K : Na', workout: 'Workout', cardio: 'Cardio', piano: 'Piano' };
   var BINARY = { workout: 1, cardio: 1, piano: 1 };
   var KNA_TARGET = 2.5;
   var TOP = 4; // every rating runs 1 to TOP; a 5 saved by an earlier version counts as TOP
@@ -352,7 +364,7 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
   };
   var DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
   var STORE_KEY = 'dailyfive.v1'; // the app's first name; kept so journals saved before the rename still load
-  var DAYS_SHOWN = 28;
+  var DAYS_SHOWN = 14;
 
   /* ---------- state ---------- */
   var S = {
@@ -390,9 +402,16 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
   }
   function logged(d) {
     if (!d) return false;
-    return d.diet != null || d.sleep != null || d.fatigue != null || d.mood != null || d.exercise != null || !!d.piano || !!(d.meals && d.meals.length);
+    return d.diet != null || d.sleep != null || d.energy != null || d.fatigue != null || d.mood != null || d.exercise != null || !!d.piano || !!(d.meals && d.meals.length);
   }
-  function rating(d, k) { return d && typeof d[k] === 'number' ? Math.max(1, Math.min(TOP, d[k])) : null; }
+  // Energy replaced an earlier Fatigue rating that ran the other way (1 = none, TOP = heavy).
+  // A day saved back then still holds "fatigue" and is read as its mirror image.
+  function rating(d, k) {
+    if (!d) return null;
+    var v = d[k];
+    if (typeof v !== 'number' && k === 'energy' && typeof d.fatigue === 'number') v = TOP + 1 - Math.max(1, Math.min(TOP, d.fatigue));
+    return typeof v === 'number' ? Math.max(1, Math.min(TOP, v)) : null;
+  }
   function exercised(d) { return !!d && (d.exercise === 'home' || d.exercise === 'cardio' || d.exercise === 'both'); }
   function fmtRatio(r) { return r >= 10 ? String(Math.round(r)) : r.toFixed(1); }
 
@@ -441,10 +460,10 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
   function saveGemini() { try { localStorage.setItem(GEM_KEY, JSON.stringify(G)); } catch (e) { /* ignore */ } }
   function renderGemini() {
     $('gem-key').value = G.key; $('gem-model').value = G.model;
-    $('gem-summary').textContent = G.key ? 'Gemini: key saved, ' + G.model : 'Gemini: add your API key';
+    $('gem-summary').textContent = G.key ? 'key saved' : 'no key yet';
     $('food-note').textContent = G.key
       ? 'Add each meal as you go. Gemini estimates its nutrients and the totals below update.'
-      : 'Open the Gemini section below and add your API key to get nutrient estimates. Entries are saved either way.';
+      : 'Add your Gemini API key in the Settings tab to get nutrient estimates. Entries are saved either way.';
   }
   /* ---------- log view ---------- */
   function buildRatings() {
@@ -493,8 +512,9 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
       else if (b.dataset.ex) {
         if (d.exercise === b.dataset.ex) delete d.exercise; else d.exercise = b.dataset.ex;
       } else if (b.dataset.k) {
-        var v = +b.dataset.v;
-        if (rating(d, b.dataset.k) === v) delete d[b.dataset.k]; else d[b.dataset.k] = v;
+        var v = +b.dataset.v, k = b.dataset.k, same = rating(d, k) === v;
+        if (k === 'energy') delete d.fatigue; // the old reversed rating, replaced by this one
+        if (same) delete d[k]; else d[k] = v;
       } else return;
       touch(S.date); renderRatings();
     });
@@ -524,9 +544,9 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
 
   var ERR_TEXT = {
     nofood: 'No food recognised in this entry.',
-    nokey: 'Add your Gemini API key below first.',
-    key: 'Gemini rejected the API key. Check it below.',
-    model: 'Gemini does not know that model name. Check it below.',
+    nokey: 'Add your Gemini API key in Settings first.',
+    key: 'Gemini rejected the API key. Check it in Settings.',
+    model: 'Gemini does not know that model name. Check it in Settings.',
     quota: 'Gemini quota reached. Try again later.',
     network: 'Could not reach Gemini. Try again when online.',
     server: 'Gemini had a problem. Try again in a moment.',
@@ -680,7 +700,7 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
       box.value = own[n.k] > 0 ? own[n.k] : '';
       box.placeholder = String(std[n.k]);
     });
-    $('goals-summary').textContent = 'Daily goals: ' + (count ? count + ' of your own' : 'standard');
+    $('goals-summary').textContent = count ? count + ' of your own' : 'standard';
     $('goals-reset').hidden = !count;
   }
   function saveSettings() {
@@ -796,14 +816,15 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
     for (var i = 41; i >= 0; i--) {
       if (rnd() < 0.08 && i > 0) continue;
       var sleep = clamp(1.5 + rnd() * 2.9), piano = rnd() < 0.62, diet = clamp(1.5 + rnd() * 2.8);
-      var x = rnd(), exercise = x < 0.4 ? 'none' : x < 0.62 ? 'home' : x < 0.86 ? 'cardio' : 'both';
+      var x = rnd(), exercise = x < 0.4 ? null : x < 0.62 ? 'home' : x < 0.86 ? 'cardio' : 'both';
       var ratio = Math.max(0.3, 0.2 + diet * 0.55 + (rnd() - 0.5) * 2);
-      out[addDays(t, -i)] = {
-        sleep: sleep, diet: diet, piano: piano, exercise: exercise,
-        fatigue: clamp(5 - sleep + (rnd() - 0.5) * 1.6 - (diet - 2.5) * 0.3),
-        mood: clamp(0.8 + sleep * 0.5 + (piano ? 0.6 : 0) + (exercise !== 'none' ? 0.5 : 0) + (rnd() - 0.5) * 1.4),
+      var rec = out[addDays(t, -i)] = {
+        sleep: sleep, diet: diet, piano: piano,
+        energy: clamp(sleep + (rnd() - 0.5) * 1.6 + (diet - 2.5) * 0.3),
+        mood: clamp(0.8 + sleep * 0.5 + (piano ? 0.6 : 0) + (exercise ? 0.5 : 0) + (rnd() - 0.5) * 1.4),
         meals: [{ id: 'x' + i, at: 0, text: '', items: [], n: { potassium: Math.round(2300 * ratio), sodium: 2300 } }]
       };
+      if (exercise) rec.exercise = exercise;
     }
     return out;
   }
@@ -811,10 +832,7 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
   function val(days, key, date) {
     var d = days[date]; if (!logged(d)) return null;
     if (key === 'piano') return d.piano ? 1 : 0;
-    if (key === 'workout' || key === 'cardio') {
-      if (!EX_TEXT[d.exercise]) return null;
-      return d.exercise === 'both' || d.exercise === (key === 'workout' ? 'home' : 'cardio') ? 1 : 0;
-    }
+    if (key === 'workout' || key === 'cardio') return d.exercise === 'both' || d.exercise === (key === 'workout' ? 'home' : 'cardio') ? 1 : 0;
     // capped so one near-zero-sodium day cannot dominate a correlation
     if (key === 'kna') { var r = kna(d); return r == null ? null : Math.min(r, KNA_TARGET * 2); }
     return rating(d, key);
@@ -865,8 +883,8 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
     out.sort(function (p, q) { return Math.abs(q.r) - Math.abs(p.r); });
     return { links: out.slice(0, 6), count: dates.length };
   }
-  var HI = { diet: 'cleaner eating', sleep: 'better sleep', fatigue: 'more fatigue', mood: 'a better mood', kna: 'a higher potassium-to-sodium ratio', workout: 'a home workout', cardio: 'cardio', piano: 'piano practice' };
-  var LO = { diet: 'less clean eating', sleep: 'worse sleep', fatigue: 'less fatigue', mood: 'a lower mood', kna: 'a lower potassium-to-sodium ratio', workout: 'no home workout', cardio: 'no cardio', piano: 'skipping piano' };
+  var HI = { diet: 'cleaner eating', sleep: 'better sleep', energy: 'more energy', mood: 'a better mood', kna: 'a higher potassium-to-sodium ratio', workout: 'a home workout', cardio: 'cardio', piano: 'piano practice' };
+  var LO = { diet: 'less clean eating', sleep: 'worse sleep', energy: 'less energy', mood: 'a lower mood', kna: 'a lower potassium-to-sodium ratio', workout: 'no home workout', cardio: 'no cardio', piano: 'skipping piano' };
   function sentence(l) {
     var first = HI[l.a].charAt(0).toUpperCase() + HI[l.a].slice(1), second = l.r > 0 ? HI[l.b] : LO[l.b];
     if (!l.lag) return first + ' goes with ' + second;
@@ -878,16 +896,43 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
     return a;
   }
   function shortDate(s) { return parse(s).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }); }
+  function dayLabel(s) {
+    var d = parse(s), o = { weekday: 'short', day: 'numeric', month: 'short' };
+    if (d.getFullYear() !== new Date().getFullYear()) o.year = 'numeric';
+    return d.toLocaleDateString(undefined, o);
+  }
+  // A day's score: the mean of the four ratings, plus one point for piano and one for any exercise. Only days with all four ratings count.
+  var SCORE_MAX = TOP + 2;
+  function dayScore(d) {
+    if (!d) return null;
+    var sum = 0;
+    for (var i = 0; i < RATINGS.length; i++) {
+      var v = rating(d, RATINGS[i].k);
+      if (v == null) return null;
+      sum += v;
+    }
+    return sum / RATINGS.length + (d.piano ? 1 : 0) + (exercised(d) ? 1 : 0);
+  }
+  // the highest-scoring day on record; the latest one wins a tie
+  function bestDay(days) {
+    var best = null;
+    Object.keys(days).filter(function (k) { return DATE_RE.test(k); }).sort().forEach(function (k) {
+      var sc = dayScore(days[k]);
+      if (sc != null && (!best || sc >= best.score)) best = { date: k, score: sc };
+    });
+    return best;
+  }
+  function fmtScore(v) { return v.toFixed(1).replace(/\.0$/, ''); }
 
   function renderPatterns() {
     var days = source(), dates = windowDates();
     $('example-banner').hidden = !S.example;
 
-    // streaks
-    var st = $('streaks'); st.textContent = '';
-    var week = dates.slice(-7);
+    // highlights
+    var st = $('stats'); st.textContent = '';
+    var week = dates.slice(-7), best = bestDay(days);
     [[streak(days, logged), '', 'days logged in a row'],
-     [streak(days, function (d) { return !!(d && d.piano); }), '', 'piano days in a row'],
+     [best ? fmtScore(best.score) : '–', best ? '/' + SCORE_MAX : '', best ? 'best day · ' + dayLabel(best.date) : 'best day · needs all four ratings'],
      [countOn(days, 'piano', week), '/7', 'piano days this week'],
      [week.filter(function (d) { return exercised(days[d]); }).length, '/7', 'exercise days this week']].forEach(function (s) {
       var box = el('div'), dt = el('dt', '', String(s[0]));
@@ -923,7 +968,7 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
     plot.appendChild(sel);
     var axis = $('axis'); axis.textContent = '';
     axis.appendChild(el('span', '', shortDate(dates[0])));
-    axis.appendChild(el('span', '', shortDate(dates[13])));
+    axis.appendChild(el('span', '', shortDate(dates[DAYS_SHOWN / 2 - 1])));
     axis.appendChild(el('span', '', 'Today'));
     renderSelection();
 
@@ -957,17 +1002,18 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
   function renderSelection() {
     var days = source(), dates = windowDates(), d = dates[S.sel], sel = $('sel');
     if (sel) { sel.style.left = 'calc(' + (S.sel / DAYS_SHOWN * 100) + '% - 2px)'; sel.style.width = 'calc(' + (100 / DAYS_SHOWN) + '% + 2px)'; }
+    // one line per parameter; an empty day keeps the same lines so the panel does not jump
+    var rec = days[d], has = logged(rec), ratio = has ? kna(rec) : null;
+    $('day-name').textContent = dayLabel(d) + (has ? '' : ' · no entry');
     var out = $('day-detail'); out.textContent = '';
-    out.appendChild(el('b', '', parse(d).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })));
-    var rec = days[d], text;
-    if (!logged(rec)) text = ' · no entry';
-    else {
-      var ratio = kna(rec);
-      text = ' · ' + RATINGS.map(function (r) { return r.name + ' ' + (rating(rec, r.k) != null ? rating(rec, r.k) : '–'); }).join(' · ')
-        + (ratio != null ? ' · K : Na ' + fmtRatio(ratio) : '')
-        + ' · Exercise ' + (EX_TEXT[rec.exercise] || '–') + ' · Piano ' + (rec.piano ? 'yes' : 'no');
-    }
-    out.appendChild(document.createTextNode(text));
+    RATINGS.map(function (r) { return [r.name, has && rating(rec, r.k) != null ? String(rating(rec, r.k)) : '–']; })
+      .concat([
+        ['K : Na', ratio != null ? fmtRatio(ratio) + ' : 1' : '–'],
+        ['Exercise', has ? EX_TEXT[rec.exercise] || 'None' : '–'],
+        ['Piano', has ? (rec.piano ? 'Yes' : 'No') : '–']
+      ]).forEach(function (p) {
+        out.appendChild(el('dt', '', p[0])); out.appendChild(el('dd', '', p[1]));
+      });
     $('open-day').hidden = S.example;
   }
   function renderAll() { renderLog(); if (S.tab === 'patterns') renderPatterns(); }
@@ -975,15 +1021,17 @@ details > .goals,details > .hint,details > .btn-quiet{margin-top:10px}
   /* ---------- wiring ---------- */
   function setTab(tab) {
     S.tab = tab;
-    ['log', 'patterns'].forEach(function (t) {
+    ['log', 'patterns', 'settings'].forEach(function (t) {
       $('tab-' + t).setAttribute('aria-selected', tab === t ? 'true' : 'false');
       $('view-' + t).hidden = tab !== t;
     });
-    if (tab === 'patterns') renderPatterns(); else renderLog();
+    if (tab === 'patterns') renderPatterns(); else if (tab === 'log') renderLog(); else renderGoals();
   }
   function wire() {
     $('tab-log').onclick = function () { setTab('log'); };
-    $('tab-patterns').onclick = function () { setTab('patterns'); };    $('prev-day').onclick = function () { S.date = addDays(S.date, -1); renderLog(); };
+    $('tab-patterns').onclick = function () { setTab('patterns'); };
+    $('tab-settings').onclick = function () { setTab('settings'); };
+    $('prev-day').onclick = function () { S.date = addDays(S.date, -1); renderLog(); };
     $('next-day').onclick = function () { if (S.date < today()) { S.date = addDays(S.date, 1); renderLog(); } };
 
     $('food-form').addEventListener('submit', function (e) {

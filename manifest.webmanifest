@@ -1,7 +1,7 @@
 {
   "name": "Even Keel",
   "short_name": "Even Keel",
-  "description": "A small daily journal for diet, sleep, fatigue, mood, exercise and piano practice, with a food log and pattern detection.",
+  "description": "A small daily journal for diet, sleep, energy, mood, exercise and piano practice, with a food log and pattern detection.",
   "start_url": ".",
   "scope": ".",
   "display": "standalone",
