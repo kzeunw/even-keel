@@ -1,0 +1,14 @@
+{
+  "name": "Even Keel",
+  "short_name": "Even Keel",
+  "description": "A small daily journal for diet, sleep, fatigue, mood, exercise and piano practice, with a food log and pattern detection.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#121a26",
+  "theme_color": "#121a26",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
