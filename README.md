@@ -13,11 +13,13 @@ You can also list what you ate. Each entry is sent to Google's Gemini, which est
 
 Meals you eat often can be saved in the Settings tab. Each one shows as a button under the food box, and one tap adds it to the day. A saved meal is estimated the first time you add it and is instant after that.
 
-The Patterns tab shows highlights (your logging streak, your best day, and this week's piano and exercise days), the last two weeks at a glance, and which of your numbers tend to move together.
+The Patterns tab shows highlights (your logging streak, your best day, and this week's piano and exercise days against your weekly targets), the last two weeks at a glance, the nutrients you are often short on or over, and which of your numbers tend to move together.
+
+A vitamin or mineral is listed as often short when it stays under 75% of its goal on at least half of the days with a full food log. Saturated fat, added sugar and sodium are listed when they go over their limit that often. Today is left out, and so are days with under half the calorie goal logged.
 
 The best day is the one with the highest score: the average of the four ratings, plus 1 point for piano and 1 point for any exercise, out of 6.
 
-The Settings tab holds the Gemini API key, your saved meals and your daily nutrient goals.
+The Settings tab holds the Gemini API key, your saved meals, your weekly targets for exercise and piano days (4 each to start with) and your daily nutrient goals.
 
 ## Files
 

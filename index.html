@@ -283,6 +283,12 @@ details > .nuts{margin-top:10px}
         </div>
       </section>
 
+      <section class="panel" aria-labelledby="gaps-h">
+        <h2 id="gaps-h">Nutrients <small>last 2 weeks</small></h2>
+        <div class="nuts" id="gaps"></div>
+        <p class="hint" id="gaps-note"></p>
+      </section>
+
       <section class="panel" aria-labelledby="links-h">
         <h2 id="links-h">What moves together</h2>
         <div class="links" id="links"></div>
@@ -320,6 +326,19 @@ details > .nuts{margin-top:10px}
           <button class="btn" type="submit">Save meal</button>
         </form>
         <p class="hint">Saved meals show as buttons under the food box on the Log tab, and one tap adds the meal to the day. A saved meal is estimated the first time you add it. After that it is added instantly with the same numbers.</p>
+      </section>
+
+      <section class="panel" id="week" aria-labelledby="week-h">
+        <h2 id="week-h">Weekly targets</h2>
+        <div class="prefs">
+          <label for="week-exercise">Exercise days a week
+            <select id="week-exercise" data-week="exercise"></select>
+          </label>
+          <label for="week-piano">Piano days a week
+            <select id="week-piano" data-week="piano"></select>
+          </label>
+          <p class="hint">Highlights on the Patterns tab count the last 7 days against these.</p>
+        </div>
       </section>
 
       <section class="panel" id="goals" aria-labelledby="goals-h">
@@ -400,6 +419,10 @@ details > .nuts{margin-top:10px}
   var STORE_KEY = 'dailyfive.v1'; // the app's first name; kept so journals saved before the rename still load
   var DAYS_SHOWN = 14, CELL_GAP = 3; // columns in the patterns grid and the space between them, in px
   var MAX_PRESETS = 30;
+  var WEEK_GOAL = 4; // exercise and piano days aimed for in a week, until the person picks their own
+  // Patterns, nutrients: a day is short on a nutrient under SHORT_AT of its goal, and a nutrient is
+  // listed when that happens on at least half of the counted days. Fewer than GAP_MIN_DAYS says nothing.
+  var SHORT_AT = 0.75, GAP_MIN_DAYS = 3;
 
   /* ---------- state ---------- */
   var S = {
@@ -489,7 +512,9 @@ details > .nuts{margin-top:10px}
       if (p.n && typeof p.n === 'object' && Array.isArray(p.items)) { q.items = p.items; q.n = p.n; }
       presets.push(q);
     });
-    return { goals: goals, presets: presets, t: r && r.t || 0 };
+    var wk = r && r.week || {};
+    function perWeek(v) { v = Math.round(+v); return v >= 1 && v <= 7 ? v : WEEK_GOAL; }
+    return { goals: goals, presets: presets, week: { exercise: perWeek(wk.exercise), piano: perWeek(wk.piano) }, t: r && r.t || 0 };
   }
   function saveLocal() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify({ days: S.days, settings: S.settings })); } catch (e) { /* ignore */ }
@@ -828,7 +853,19 @@ details > .nuts{margin-top:10px}
   }
   function saveSettings() {
     S.settings.t = Date.now();
-    saveLocal(); queueWrite('settings'); renderGoals(); renderPresets(); renderNutrients();
+    saveLocal(); queueWrite('settings'); renderGoals(); renderPresets(); renderWeek(); renderNutrients();
+  }
+  // Weekly targets: how many exercise and piano days to aim for, 1 to 7
+  function buildWeek() {
+    ['exercise', 'piano'].forEach(function (k) {
+      var box = $('week-' + k);
+      for (var v = 1; v <= 7; v++) { var o = el('option', '', String(v)); o.value = v; box.appendChild(o); }
+      box.onchange = function () { S.settings.week[k] = +box.value; saveSettings(); };
+    });
+  }
+  function renderWeek() {
+    $('week-exercise').value = S.settings.week.exercise;
+    $('week-piano').value = S.settings.week.piano;
   }
   // Saved meals: a button each under the food box, and the list in Settings
   function presetById(id) {
@@ -1076,6 +1113,14 @@ details > .nuts{margin-top:10px}
     var seed = 7, out = {}, t = today();
     function rnd() { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; }
     function clamp(v) { return Math.max(1, Math.min(TOP, Math.round(v))); }
+    // nutrients sit near their goals, a few of them well under or over so the nutrient lists have something to show
+    var goal = targets(), LEAN = { vitD: 0.35, vitE: 0.55, magnesium: 0.62, calcium: 0.68, satfat: 1.2, sugar: 0.85 };
+    function food(i, ratio) {
+      var n = {};
+      NUTS.forEach(function (x, j) { n[x.k] = Math.round(goal[x.k] * (LEAN[x.k] || 1.05) * (0.8 + ((i * 31 + j * 17) % 10) * 0.045)); });
+      n.sodium = 2300; n.potassium = Math.round(2300 * ratio);
+      return n;
+    }
     for (var i = 41; i >= 0; i--) {
       if (rnd() < 0.08 && i > 0) continue;
       var sleep = clamp(1.5 + rnd() * 2.9), piano = rnd() < 0.62, diet = clamp(1.5 + rnd() * 2.8);
@@ -1085,7 +1130,7 @@ details > .nuts{margin-top:10px}
         sleep: sleep, diet: diet, piano: piano,
         energy: clamp(sleep + (rnd() - 0.5) * 1.6 + (diet - 2.5) * 0.3),
         mood: clamp(0.8 + sleep * 0.5 + (piano ? 0.6 : 0) + (exercise ? 0.5 : 0) + (rnd() - 0.5) * 1.4),
-        meals: [{ id: 'x' + i, at: 0, text: '', items: [], n: { potassium: Math.round(2300 * ratio), sodium: 2300 } }]
+        meals: [{ id: 'x' + i, at: 0, text: '', items: [], n: food(i, ratio) }]
       };
       if (exercise) rec.exercise = exercise;
     }
@@ -1186,6 +1231,59 @@ details > .nuts{margin-top:10px}
     return best;
   }
   function fmtScore(v) { return v.toFixed(1).replace(/\.0$/, ''); }
+  // Which vitamins and minerals keep falling short, and which stay-under nutrients keep going over.
+  // Today is left out because it is not over, and so is a day with under half the calorie goal
+  // logged: most likely only part of its food was written down, which would make everything look short.
+  function nutrientGaps(days, dates) {
+    var tgt = targets(), t0 = today(), used = [], low = [], high = [];
+    dates.forEach(function (d) {
+      var t = d !== t0 && totals(days[d]);
+      if (t && t.kcal >= tgt.kcal / 2) used.push(t);
+    });
+    if (used.length >= GAP_MIN_DAYS) NUTS.forEach(function (n) {
+      var limit = n.g === 'limit';
+      if (!limit && n.g !== 'vit' && n.g !== 'min') return;
+      var hits = 0, sum = 0;
+      used.forEach(function (t) {
+        var p = t[n.k] / tgt[n.k]; sum += p;
+        if (limit ? p > 1 : p < SHORT_AT) hits++;
+      });
+      if (hits * 2 >= used.length) (limit ? high : low).push({ n: n, hits: hits, avg: sum / used.length });
+    });
+    low.sort(function (a, b) { return b.hits - a.hits || a.avg - b.avg; });
+    high.sort(function (a, b) { return b.hits - a.hits || b.avg - a.avg; });
+    return { count: used.length, low: low, high: high };
+  }
+  function gapRow(g, over, count) {
+    var pct = Math.round(g.avg * 100), row = el('div', 'nut' + (over ? ' is-over' : ''));
+    row.appendChild(el('span', '', g.n.n));
+    var val = el('span', 'nut-val');
+    val.appendChild(el('b', '', pct + '%'));
+    val.appendChild(document.createTextNode(' avg · ' + (over ? 'over' : 'short') + ' ' + g.hits + ' of ' + count + ' days'));
+    row.appendChild(val);
+    var bar = el('div', 'bar');
+    bar.setAttribute('role', 'meter'); bar.setAttribute('aria-label', g.n.n + ' averages ' + pct + ' percent of its daily ' + (over ? 'limit' : 'goal'));
+    bar.setAttribute('aria-valuemin', '0'); bar.setAttribute('aria-valuemax', '100'); bar.setAttribute('aria-valuenow', String(Math.min(100, pct)));
+    var fill = el('i'); fill.style.width = Math.min(100, pct) + '%';
+    bar.appendChild(fill); row.appendChild(bar);
+    return row;
+  }
+  function renderGaps(days, dates) {
+    var res = nutrientGaps(days, dates), box = $('gaps'), note = $('gaps-note');
+    box.textContent = '';
+    if (res.count < GAP_MIN_DAYS) {
+      var left = GAP_MIN_DAYS - res.count;
+      note.textContent = 'Shows which nutrients you are often short on or over, after ' + GAP_MIN_DAYS + ' full days of food logging. ' + left + ' to go.';
+      return;
+    }
+    box.appendChild(el('div', 'subhead', 'Often short'));
+    if (res.low.length) res.low.forEach(function (g) { box.appendChild(gapRow(g, false, res.count)); });
+    else box.appendChild(el('p', 'hint', 'No vitamin or mineral is regularly short.'));
+    box.appendChild(el('div', 'subhead', 'Often over the limit'));
+    if (res.high.length) res.high.forEach(function (g) { box.appendChild(gapRow(g, true, res.count)); });
+    else box.appendChild(el('p', 'hint', 'Nothing is regularly over its limit.'));
+    note.textContent = 'From ' + res.count + ' full days of food logging. Short means under ' + SHORT_AT * 100 + '% of the goal on at least half of those days. Today is left out, and so are days with under half your calorie goal logged.';
+  }
 
   function renderPatterns() {
     var days = source(), dates = windowDates();
@@ -1196,8 +1294,8 @@ details > .nuts{margin-top:10px}
     var week = dates.slice(-7), best = bestDay(days);
     [[streak(days, logged), '', 'days logged in a row'],
      [best ? fmtScore(best.score) : '–', best ? '/' + SCORE_MAX : '', best ? 'best day · ' + dayLabel(best.date) : 'best day · needs all four ratings'],
-     [countOn(days, 'piano', week), '/7', 'piano days this week'],
-     [week.filter(function (d) { return exercised(days[d]); }).length, '/7', 'exercise days this week']].forEach(function (s) {
+     [countOn(days, 'piano', week), '/' + S.settings.week.piano, 'piano days this week'],
+     [week.filter(function (d) { return exercised(days[d]); }).length, '/' + S.settings.week.exercise, 'exercise days this week']].forEach(function (s) {
       var box = el('div'), dt = el('dt', '', String(s[0]));
       if (s[1]) dt.appendChild(el('span', '', s[1]));
       box.appendChild(dt); box.appendChild(el('dd', '', s[2]));
@@ -1218,7 +1316,7 @@ details > .nuts{margin-top:10px}
       });
       plot.appendChild(row);
       var cell = el('div');
-      if (BINARY[k]) { cell.textContent = String(countOn(days, k, week)); cell.appendChild(el('span', '', '/7')); }
+      if (BINARY[k]) { cell.textContent = String(countOn(days, k, week)); cell.appendChild(el('span', '', '×')); } // times in the last 7 days
       else {
         var avg = k === 'kna' ? knaMean : mean;
         var cur = avg(days, k, week), prev = avg(days, k, dates.slice(-14, -7));
@@ -1234,6 +1332,7 @@ details > .nuts{margin-top:10px}
     axis.appendChild(el('span', '', shortDate(dates[DAYS_SHOWN / 2 - 1])));
     axis.appendChild(el('span', '', 'Today'));
     renderSelection();
+    renderGaps(days, dates);
 
     // links
     var res = findLinks(days), box = $('links'), note = $('links-note');
@@ -1426,9 +1525,9 @@ details > .nuts{margin-top:10px}
               S.days[k] = r; n++;
             }
           });
-          // goals and saved meals come along when the backup's are the newer ones
+          // goals, weekly targets and saved meals come along when the backup's are the newer ones
           if (data.settings && typeof data.settings === 'object' && (data.settings.t || 0) > (S.settings.t || 0)) {
-            S.settings = normSettings(data.settings); renderGoals(); renderPresets();
+            S.settings = normSettings(data.settings); renderGoals(); renderPresets(); renderWeek();
           }
           saveLocal(); renderAll();
           note.textContent = n + (n === 1 ? ' day' : ' days') + ' restored. Newer entries already on this device were kept.';
@@ -1453,6 +1552,8 @@ details > .nuts{margin-top:10px}
   buildGoals();
   renderGoals();
   renderPresets();
+  buildWeek();
+  renderWeek();
   renderLog();
   loadGemini();
   renderGemini();
