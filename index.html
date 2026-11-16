@@ -81,6 +81,7 @@ h1{font:700 22px/1.1 var(--font-display);letter-spacing:-.01em}
 h2{font:600 12px/1.2 var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 h2 small{font:400 12px/1.2 var(--font-body);letter-spacing:0;text-transform:none}
 .hint{font-size:13px;color:var(--muted)}
+.hint button{color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:2px;padding:8px 4px;margin:-8px -4px}
 
 /* ratings */
 .row{display:grid;grid-template-columns:68px 1fr;column-gap:10px;align-items:start}
@@ -108,7 +109,16 @@ h2 small{font:400 12px/1.2 var(--font-body);letter-spacing:0;text-transform:none
 .btn:disabled{opacity:.5;cursor:default}
 .btn-quiet{padding:0 12px;min-height:36px;border-radius:8px;border:1px solid var(--line);font-weight:600;font-size:13px}
 .meals{display:flex;flex-direction:column}
-.meal{display:grid;grid-template-columns:1fr 36px;column-gap:8px;padding-block:9px;border-top:1px solid var(--line)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{min-height:36px;max-width:100%;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:var(--bg);font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.preset-form{display:flex;flex-direction:column;gap:8px}
+.preset-form input,.preset-form textarea{font-size:16px;min-width:0;width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--line);background:var(--bg);resize:none}
+.preset-form input{height:44px;padding-block:0}
+.preset-form input::placeholder,.preset-form textarea::placeholder{color:var(--muted)}
+.preset-form .btn{align-self:flex-start}
+.preset-name{font-weight:600}
+.meal{display:grid;grid-template-columns:1fr auto;column-gap:8px;padding-block:9px;border-top:1px solid var(--line)}
+.meal-acts{display:flex}
 .meal-body{min-width:0;display:flex;flex-direction:column;gap:2px}
 .meal-text{overflow-wrap:anywhere}
 .meal-time{color:var(--muted);font-variant-numeric:tabular-nums;margin-right:6px}
@@ -116,7 +126,7 @@ h2 small{font:400 12px/1.2 var(--font-body);letter-spacing:0;text-transform:none
 .meal-sub b{color:var(--ink);font-weight:600}
 .meal-sub button{color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .meal-note{font-size:11.5px}
-.meal-x{width:36px;height:36px;border-radius:8px;color:var(--muted);font-size:18px;line-height:1}
+.meal-x{width:36px;height:36px;border-radius:8px;color:var(--muted);font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center}
 .dots::after{content:"";animation:dots 1.2s steps(4,end) infinite}
 @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 @media (prefers-reduced-motion: reduce){.dots::after{animation:none;content:"..."}}
@@ -231,6 +241,8 @@ details > .nuts{margin-top:10px}
           <textarea id="food-text" rows="2" aria-label="What you ate" placeholder="2 eggs, toast with butter, coffee with milk"></textarea>
           <button class="btn" type="submit" id="food-add">Add</button>
         </form>
+        <p class="hint" id="edit-note" hidden>Rewriting an entry. It stays out of the totals until you save. <button type="button" id="edit-cancel">Cancel</button></p>
+        <div class="chips" id="preset-chips" role="group" aria-label="Saved meals" hidden></div>
         <p class="hint" id="food-note"></p>
         <ul class="meals" id="meals"></ul>
         <div id="nutrients"></div>
@@ -297,6 +309,17 @@ details > .nuts{margin-top:10px}
           </label>
           <p class="hint">Create a key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. The key is stored only in this browser and sent only to Google. What you type into the food log is sent to Google for analysis.</p>
         </div>
+      </section>
+
+      <section class="panel" id="presets" aria-labelledby="presets-h">
+        <h2 id="presets-h">Saved meals <small id="presets-summary"></small></h2>
+        <ul class="meals" id="presets-list"></ul>
+        <form class="preset-form" id="preset-form">
+          <input id="preset-name" type="text" maxlength="30" autocomplete="off" aria-label="Name of the saved meal" placeholder="Name, e.g. Usual breakfast">
+          <textarea id="preset-text" rows="2" aria-label="What the saved meal contains" placeholder="Oats with milk, a banana, 2 tbsp peanut butter"></textarea>
+          <button class="btn" type="submit">Save meal</button>
+        </form>
+        <p class="hint">Saved meals show as buttons under the food box on the Log tab, and one tap adds the meal to the day. A saved meal is estimated the first time you add it. After that it is added instantly with the same numbers.</p>
       </section>
 
       <section class="panel" id="goals" aria-labelledby="goals-h">
@@ -376,6 +399,7 @@ details > .nuts{margin-top:10px}
   var DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
   var STORE_KEY = 'dailyfive.v1'; // the app's first name; kept so journals saved before the rename still load
   var DAYS_SHOWN = 14, CELL_GAP = 3; // columns in the patterns grid and the space between them, in px
+  var MAX_PRESETS = 30;
 
   /* ---------- state ---------- */
   var S = {
@@ -390,6 +414,8 @@ details > .nuts{margin-top:10px}
   var errs = {};      // meal id -> error code from the last attempt
   var errNote = {};   // meal id -> what the service itself said about that failure
   var srcOpen = {};   // nutrient key -> true while its sources are shown
+  var editing = null; // { date, id } of the entry being rewritten in the text box; it is left out of the list and the totals meanwhile
+  var splitTried = {}, splitting = false; // see autoSplit
   var toastTimer = 0, undoFn = null, exampleDays = null;
 
   /* ---------- small helpers ---------- */
@@ -427,6 +453,9 @@ details > .nuts{margin-top:10px}
   }
   function exercised(d) { return !!d && (d.exercise === 'home' || d.exercise === 'cardio' || d.exercise === 'both'); }
   function fmtRatio(r) { return r >= 10 ? String(Math.round(r)) : r.toFixed(1); }
+  function hasParts(m) { return (m.items || []).some(function (i) { return i.n; }); } // per-food figures present
+  function inEdit(m) { return !!editing && editing.id === m.id; }
+  var PENCIL = '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M11.2 2.3l2.5 2.5L5.5 13H3v-2.5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
 
   /* ---------- storage: this device first, then the synced store ---------- */
   function loadLocal() {
@@ -447,13 +476,20 @@ details > .nuts{margin-top:10px}
     });
   }
   // One shape for settings, whatever version of the page saved them: goals holds only
-  // the daily goals the person set themselves, keyed like NUTS.
+  // the daily goals the person set themselves, keyed like NUTS. presets are the saved meals;
+  // each gains items and n (its nutrient estimate) the first time it is logged.
   function normSettings(r) {
-    var goals = {}, src = r && r.goals;
+    var goals = {}, src = r && r.goals, presets = [];
     if (src && typeof src === 'object') {
       NUTS.forEach(function (n) { var v = +src[n.k]; if (v > 0 && isFinite(v)) goals[n.k] = v; });
     } else if (r && +r.kcalOwn > 0) goals.kcal = +r.kcalOwn; // a calorie target typed in an earlier version
-    return { goals: goals, t: r && r.t || 0 };
+    if (r && Array.isArray(r.presets)) r.presets.slice(0, MAX_PRESETS).forEach(function (p) {
+      if (!p || typeof p.text !== 'string' || !p.text.trim()) return;
+      var q = { id: String(p.id || uid()), name: String(p.name || '').slice(0, 30), text: p.text.slice(0, 2000) };
+      if (p.n && typeof p.n === 'object' && Array.isArray(p.items)) { q.items = p.items; q.n = p.n; }
+      presets.push(q);
+    });
+    return { goals: goals, presets: presets, t: r && r.t || 0 };
   }
   function saveLocal() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify({ days: S.days, settings: S.settings })); } catch (e) { /* ignore */ }
@@ -582,6 +618,7 @@ details > .nuts{margin-top:10px}
     list.textContent = '';
     if (!d || !d.meals) return;
     d.meals.forEach(function (m) {
+      if (inEdit(m)) return; // it is in the text box, being rewritten
       var li = el('li', 'meal'), body = el('div', 'meal-body');
       var text = el('div', 'meal-text');
       var tm = new Date(m.at || 0);
@@ -594,13 +631,6 @@ details > .nuts{margin-top:10px}
         sub.appendChild(el('b', '', num(m.n.kcal || 0) + ' kcal'));
         var parts = (m.items || []).map(function (i) { return i.name + (i.amount ? ' (' + i.amount + ')' : ''); });
         if (parts.length) sub.appendChild(document.createTextNode(' · ' + parts.join(', ')));
-        if (!(m.items || []).some(function (i) { return i.n; }) && S.date >= addDays(today(), -60)) {
-          // estimated before per-food figures existed: offer to redo it so sources can be shown
-          sub.appendChild(document.createTextNode(' · '));
-          var split = el('button', '', 'Split by food'); split.type = 'button';
-          split.onclick = function () { analyse(S.date, m.id); };
-          sub.appendChild(split);
-        }
       } else {
         var code = errs[m.id];
         sub.appendChild(document.createTextNode((code ? (ERR_TEXT[code] || 'The estimate failed.') : 'Not analysed yet.') + ' '));
@@ -612,12 +642,38 @@ details > .nuts{margin-top:10px}
       }
       body.appendChild(sub);
       if (!busy[m.id] && !m.n && errs[m.id] && errNote[m.id]) body.appendChild(el('div', 'meal-sub meal-note', errNote[m.id]));
+      var acts = el('div', 'meal-acts');
+      if (!busy[m.id]) { // an estimate under way would land on the old text
+        var ed = el('button', 'meal-x'); ed.type = 'button'; ed.innerHTML = PENCIL;
+        ed.setAttribute('aria-label', 'Edit ' + m.text);
+        ed.onclick = function () { startEdit(S.date, m.id); };
+        acts.appendChild(ed);
+      }
       var x = el('button', 'meal-x', '×'); x.type = 'button';
       x.setAttribute('aria-label', 'Remove ' + m.text);
       x.onclick = function () { removeMeal(S.date, m.id); };
-      li.appendChild(body); li.appendChild(x);
+      acts.appendChild(x);
+      li.appendChild(body); li.appendChild(acts);
       list.appendChild(li);
     });
+  }
+  // Editing puts an entry's text back in the box. The entry itself stays stored until the
+  // new text is saved, so cancelling, changing day or reloading leaves it as it was.
+  function startEdit(date, id) {
+    var m = findMeal(date, id); if (!m) return;
+    editing = { date: date, id: id };
+    var box = $('food-text'); box.value = m.text;
+    renderEdit(); renderMeals(); renderNutrients();
+    box.focus();
+  }
+  function stopEdit() {
+    if (!editing) return;
+    editing = null; $('food-text').value = '';
+    renderEdit(); renderMeals(); renderNutrients();
+  }
+  function renderEdit() {
+    $('food-add').textContent = editing ? 'Save' : 'Add';
+    $('edit-note').hidden = !editing;
   }
   function targets() {
     var t = standardGoals(), own = S.settings.goals;
@@ -655,7 +711,7 @@ details > .nuts{margin-top:10px}
     var t = {}, any = false;
     NUTS.forEach(function (n) { t[n.k] = 0; });
     (d && d.meals || []).forEach(function (m) {
-      if (!m.n) return; any = true;
+      if (!m.n || inEdit(m)) return; any = true;
       NUTS.forEach(function (n) { t[n.k] += +m.n[n.k] || 0; });
     });
     return any ? t : null;
@@ -684,7 +740,7 @@ details > .nuts{margin-top:10px}
   function sourcesOf(d, k) {
     var by = {}, list = [];
     (d && d.meals || []).forEach(function (m) {
-      if (!m.n) return;
+      if (!m.n || inEdit(m)) return;
       var parts = (m.items || []).filter(function (i) { return i.n; });
       if (!parts.length) parts = [{ name: m.text.length > 40 ? m.text.slice(0, 39) + '…' : m.text, n: m.n }];
       parts.forEach(function (i) {
@@ -772,9 +828,37 @@ details > .nuts{margin-top:10px}
   }
   function saveSettings() {
     S.settings.t = Date.now();
-    saveLocal(); queueWrite('settings'); renderGoals(); renderNutrients();
+    saveLocal(); queueWrite('settings'); renderGoals(); renderPresets(); renderNutrients();
   }
-  function renderLog() { renderDate(); renderRatings(); renderMeals(); renderNutrients(); }
+  // Saved meals: a button each under the food box, and the list in Settings
+  function presetById(id) {
+    return S.settings.presets.filter(function (p) { return p.id === id; })[0] || null;
+  }
+  function presetLabel(p) { return p.name || (p.text.length > 26 ? p.text.slice(0, 25) + '…' : p.text); }
+  function renderPresets() {
+    var ps = S.settings.presets, chips = $('preset-chips'), list = $('presets-list');
+    chips.textContent = ''; chips.hidden = !ps.length;
+    list.textContent = '';
+    ps.forEach(function (p) {
+      var c = el('button', '', '+ ' + presetLabel(p)); c.type = 'button'; c.dataset.preset = p.id;
+      c.setAttribute('aria-label', 'Add ' + presetLabel(p) + ' to this day');
+      chips.appendChild(c);
+      var li = el('li', 'meal'), body = el('div', 'meal-body');
+      if (p.name) body.appendChild(el('div', 'meal-text preset-name', p.name));
+      body.appendChild(el('div', p.name ? 'meal-sub' : 'meal-text', p.text));
+      body.appendChild(el('div', 'meal-sub', p.n ? num(p.n.kcal || 0) + ' kcal' : 'Estimated the first time you add it'));
+      var x = el('button', 'meal-x', '×'); x.type = 'button'; x.dataset.drop = p.id;
+      x.setAttribute('aria-label', 'Remove saved meal ' + presetLabel(p));
+      li.appendChild(body); li.appendChild(x);
+      list.appendChild(li);
+    });
+    $('presets-summary').textContent = ps.length ? ps.length + ' saved' : 'none yet';
+  }
+  function renderLog() {
+    if (editing && editing.date !== S.date) { editing = null; $('food-text').value = ''; } // an edit does not follow to another day
+    renderEdit(); renderDate(); renderRatings(); renderMeals(); renderNutrients();
+    autoSplit();
+  }
 
   /* ---------- food analysis ---------- */
   function findMeal(date, id) {
@@ -824,6 +908,32 @@ details > .nuts{margin-top:10px}
       sum[d.k] = Math.round(t * 100) / 100;
     });
     return { items: items, n: sum };
+  }
+  // An estimate lands on its entry. A saved meal remembers its first one, so adding it again needs no request.
+  function setEstimate(date, m, res) {
+    m.items = res.items; m.n = res.n; touch(date);
+    var p = m.ps && presetById(m.ps);
+    if (p && !p.n && p.text === m.text && hasParts(m)) { p.items = clone(res.items); p.n = clone(res.n); saveSettings(); }
+  }
+  // Entries estimated before per-food figures existed have one total and no sources. When their
+  // day is opened they are estimated again, one at a time. Each is tried once per visit and keeps
+  // its old total if that fails; one that comes back unsplit is marked so it is not asked again.
+  function autoSplit() {
+    var date = S.date, d = day(date);
+    if (splitting || !d || date < addDays(today(), -60)) return;
+    var m = (d.meals || []).filter(function (x) {
+      return x.n && !x.whole && !splitTried[x.id] && !busy[x.id] && !inEdit(x) && !hasParts(x);
+    })[0];
+    if (!m) return;
+    var p = analyse(date, m.id, 'Splitting by food');
+    if (!p) return;
+    splitTried[m.id] = true; splitting = true;
+    p.then(function () {
+      splitting = false;
+      var x = findMeal(date, m.id);
+      if (x && x.n && !errs[x.id] && !hasParts(x)) { x.whole = 1; touch(date); }
+      autoSplit();
+    });
   }
   function parseJson(text) {
     try { return JSON.parse(text); } catch (e) { /* fall through */ }
@@ -886,13 +996,15 @@ details > .nuts{margin-top:10px}
     }
     return go();
   }
-  function analyse(date, id) {
-    var meal = findMeal(date, id); if (!meal || busy[id]) return;
-    if (!G.key) { errs[id] = 'nokey'; if (S.date === date) renderMeals(); return; }
-    busy[id] = true; delete errs[id]; delete errNote[id];
+  // note: what to show while it runs, when that is not a first estimate. Returns a promise that
+  // settles when the attempt is over, or null when none was started.
+  function analyse(date, id, note) {
+    var meal = findMeal(date, id); if (!meal || busy[id]) return null;
+    if (!G.key) { errs[id] = 'nokey'; if (S.date === date) renderMeals(); return null; }
+    busy[id] = note || true; delete errs[id]; delete errNote[id];
     meal.p = 1; saveLocal(); // marks the estimate as under way, so a reload picks it up again
     if (S.date === date) renderMeals();
-    askWithRetry(meal.text, function (n) {
+    return askWithRetry(meal.text, function (n) {
       busy[id] = 'Gemini is slow to answer. Attempt ' + n + ' of ' + TRIES;
       if (S.date === date) renderMeals();
     }).then(function (out) {
@@ -900,7 +1012,7 @@ details > .nuts{margin-top:10px}
       if (!m) return;
       delete m.p;
       if (!res) { errs[id] = 'nofood'; saveLocal(); return; }
-      m.items = res.items; m.n = res.n; touch(date);
+      setEstimate(date, m, res);
     }).catch(function (e) {
       var m = findMeal(date, id);
       if (m) { delete m.p; saveLocal(); }
@@ -932,8 +1044,28 @@ details > .nuts{margin-top:10px}
       if (S.date === date) { renderMeals(); renderNutrients(); }
     });
   }
+  function addMeal(text, preset) {
+    var date = S.date, d = day(date, true), now = new Date(), at = parse(date);
+    at.setHours(now.getHours(), now.getMinutes(), 0, 0);
+    var meal = { id: uid(), at: at.getTime(), text: text.slice(0, 2000), items: [], n: null };
+    if (preset) {
+      meal.ps = preset.id; // lets the first estimate be kept for the saved meal
+      if (preset.n) { meal.items = clone(preset.items); meal.n = clone(preset.n); }
+    }
+    d.meals.push(meal);
+    touch(date); renderMeals();
+    if (meal.n) renderNutrients(); else analyse(date, meal.id);
+    return meal.id;
+  }
+  function dropMeal(date, id) {
+    var d = S.days[date]; if (!d) return;
+    d.meals = d.meals.filter(function (m) { return m.id !== id; });
+    touch(date);
+    if (S.date === date) { renderMeals(); renderNutrients(); }
+  }
   function toast(text, undo) {
-    $('toast-text').textContent = text; undoFn = undo;
+    $('toast-text').textContent = text; undoFn = undo || null;
+    $('toast-undo').hidden = !undo;
     $('toast').hidden = false;
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { $('toast').hidden = true; undoFn = null; }, 6000);
@@ -1167,15 +1299,48 @@ details > .nuts{margin-top:10px}
 
     $('food-form').addEventListener('submit', function (e) {
       e.preventDefault();
-      var box = $('food-text'), text = box.value.trim();
+      var box = $('food-text'), text = box.value.trim().slice(0, 2000);
       if (!text) { box.focus(); return; }
-      var d = day(S.date, true), now = new Date(), at = parse(S.date);
-      at.setHours(now.getHours(), now.getMinutes(), 0, 0);
-      var meal = { id: uid(), at: at.getTime(), text: text.slice(0, 2000), items: [], n: null };
-      d.meals.push(meal);
-      box.value = '';
-      touch(S.date); renderMeals();
-      analyse(S.date, meal.id);
+      var ed = editing, old = ed && findMeal(ed.date, ed.id);
+      editing = null; box.value = ''; renderEdit();
+      if (!old) { addMeal(text); return; }
+      // a rewritten entry keeps its time and place in the list; unchanged text keeps its estimate too
+      if (old.text !== text) {
+        old.text = text; old.items = []; old.n = null;
+        delete old.ps; delete old.whole; delete errs[old.id]; delete errNote[old.id];
+        touch(ed.date);
+      }
+      renderMeals(); renderNutrients();
+      if (!old.n) analyse(ed.date, old.id);
+    });
+    $('edit-cancel').onclick = stopEdit;
+
+    $('preset-chips').addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-preset]'), p = b && presetById(b.dataset.preset);
+      if (!p) return;
+      var date = S.date, id = addMeal(p.text, p);
+      toast('Added ' + presetLabel(p), function () { dropMeal(date, id); });
+    });
+    $('preset-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = $('preset-name'), box = $('preset-text'), text = box.value.trim().slice(0, 2000);
+      if (!text) { box.focus(); return; }
+      if (S.settings.presets.length >= MAX_PRESETS) { toast('Remove a saved meal first. ' + MAX_PRESETS + ' is the most.'); return; }
+      S.settings.presets.push({ id: uid(), name: name.value.trim().slice(0, 30), text: text });
+      name.value = ''; box.value = '';
+      saveSettings();
+    });
+    $('presets-list').addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-drop]'); if (!b) return;
+      var ps = S.settings.presets, idx = -1;
+      ps.forEach(function (p, i) { if (p.id === b.dataset.drop) idx = i; });
+      if (idx < 0) return;
+      var gone = ps.splice(idx, 1)[0];
+      saveSettings();
+      toast('Saved meal removed', function () {
+        S.settings.presets.splice(Math.min(idx, S.settings.presets.length), 0, gone);
+        saveSettings();
+      });
     });
     $('food-text').addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) $('food-form').requestSubmit();
@@ -1261,6 +1426,10 @@ details > .nuts{margin-top:10px}
               S.days[k] = r; n++;
             }
           });
+          // goals and saved meals come along when the backup's are the newer ones
+          if (data.settings && typeof data.settings === 'object' && (data.settings.t || 0) > (S.settings.t || 0)) {
+            S.settings = normSettings(data.settings); renderGoals(); renderPresets();
+          }
           saveLocal(); renderAll();
           note.textContent = n + (n === 1 ? ' day' : ' days') + ' restored. Newer entries already on this device were kept.';
         } catch (e) { note.textContent = 'That file is not an Even Keel backup.'; }
@@ -1283,6 +1452,7 @@ details > .nuts{margin-top:10px}
   wire();
   buildGoals();
   renderGoals();
+  renderPresets();
   renderLog();
   loadGemini();
   renderGemini();
