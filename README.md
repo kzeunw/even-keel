@@ -15,7 +15,9 @@ Meals you eat often can be saved in the Settings tab. Each one shows as a button
 
 The Patterns tab shows highlights (your logging streak, your best day, and this week's piano and exercise days against your weekly targets), the last two weeks at a glance, the nutrients you are often short on or over, and which of your numbers tend to move together.
 
-A vitamin or mineral is listed as often short when it stays under 75% of its goal on at least half of the days with a full food log. Saturated fat, added sugar and sodium are listed when they go over their limit that often. Today is left out, and so are days with under half the calorie goal logged.
+A vitamin or mineral is listed as often short when it stays under 75% of its goal on at least half of the days with a full food log. Saturated fat, added sugar and sodium are listed when they go over their limit that often. Days with under half the calorie goal logged are left out.
+
+The nutrient lists and the links between your numbers update once a day, at midnight, from the days before today. Entries you add during the day, including ones added to past days, show up there after the next midnight. The highlights and the two-week grid update straight away.
 
 The best day is the one with the highest score: the average of the four ratings, plus 1 point for piano and 1 point for any exercise, out of 6.
 

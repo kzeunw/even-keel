@@ -837,7 +837,7 @@ details > .nuts{margin-top:10px}
       if (v > 0 && v <= 100000) S.settings.goals[k] = Math.round(v * 100) / 100;
       else if (v === 0) delete S.settings.goals[k];
       else { renderGoals(); return; } // not a usable number: put the old value back
-      saveSettings();
+      staleSnap(); saveSettings();
     });
   }
   function renderGoals() {
@@ -1268,12 +1268,40 @@ details > .nuts{margin-top:10px}
     bar.appendChild(fill); row.appendChild(bar);
     return row;
   }
-  function renderGaps(days, dates) {
-    var res = nutrientGaps(days, dates), box = $('gaps'), note = $('gaps-note');
+  // The nutrient lists and the links are worked out once per calendar day, from the days before it,
+  // and kept until the date changes. So they move at midnight and not with every entry, including
+  // entries added later to past days. Changing a goal, restoring a backup or receiving days from
+  // another device works them out again straight away.
+  var SNAP_KEY = 'dailyfive.patterns', snap = null;
+  var AT_MIDNIGHT = ' Updates once a day at midnight, so today is not counted yet.';
+  function buildSnap(days, t) {
+    var past = {};
+    Object.keys(days).forEach(function (k) { if (k < t) past[k] = days[k]; });
+    return { d: t, gaps: nutrientGaps(past, windowDates()), links: findLinks(past) };
+  }
+  function daily() {
+    var t = today();
+    if (snap && snap.d === t) return snap;
+    if (!snap) {
+      try {
+        var s = JSON.parse(localStorage.getItem(SNAP_KEY) || 'null');
+        if (s && s.d === t && s.gaps && s.links) return snap = s;
+      } catch (e) { /* storage blocked or unreadable: work it out again */ }
+    }
+    snap = buildSnap(S.days, t);
+    try { localStorage.setItem(SNAP_KEY, JSON.stringify(snap)); } catch (e2) { /* ignore */ }
+    return snap;
+  }
+  function staleSnap() {
+    snap = null;
+    try { localStorage.removeItem(SNAP_KEY); } catch (e) { /* ignore */ }
+  }
+  function renderGaps(res) {
+    var box = $('gaps'), note = $('gaps-note');
     box.textContent = '';
     if (res.count < GAP_MIN_DAYS) {
       var left = GAP_MIN_DAYS - res.count;
-      note.textContent = 'Shows which nutrients you are often short on or over, after ' + GAP_MIN_DAYS + ' full days of food logging. ' + left + ' to go.';
+      note.textContent = 'Shows which nutrients you are often short on or over, after ' + GAP_MIN_DAYS + ' full days of food logging. ' + left + ' to go.' + AT_MIDNIGHT;
       return;
     }
     box.appendChild(el('div', 'subhead', 'Often short'));
@@ -1282,7 +1310,7 @@ details > .nuts{margin-top:10px}
     box.appendChild(el('div', 'subhead', 'Often over the limit'));
     if (res.high.length) res.high.forEach(function (g) { box.appendChild(gapRow(g, true, res.count)); });
     else box.appendChild(el('p', 'hint', 'Nothing is regularly over its limit.'));
-    note.textContent = 'From ' + res.count + ' full days of food logging. Short means under ' + SHORT_AT * 100 + '% of the goal on at least half of those days. Today is left out, and so are days with under half your calorie goal logged.';
+    note.textContent = 'From ' + res.count + ' full days of food logging. Short means under ' + SHORT_AT * 100 + '% of the goal on at least half of those days. Days with under half your calorie goal logged are left out.' + AT_MIDNIGHT;
   }
 
   function renderPatterns() {
@@ -1332,15 +1360,17 @@ details > .nuts{margin-top:10px}
     axis.appendChild(el('span', '', shortDate(dates[DAYS_SHOWN / 2 - 1])));
     axis.appendChild(el('span', '', 'Today'));
     renderSelection();
-    renderGaps(days, dates);
+    // the two sections below change once a day; the example is always worked out fresh
+    var once = S.example ? buildSnap(days, today()) : daily();
+    renderGaps(once.gaps);
 
     // links
-    var res = findLinks(days), box = $('links'), note = $('links-note');
+    var res = once.links, box = $('links'), note = $('links-note');
     box.textContent = '';
     if (res.count < 7) {
-      note.textContent = 'Links between your numbers appear after 7 logged days. ' + (7 - res.count) + ' to go.';
+      note.textContent = 'Links between your numbers appear after 7 logged days. ' + (7 - res.count) + ' to go.' + AT_MIDNIGHT;
     } else if (!res.links.length) {
-      note.textContent = 'No clear links between your numbers yet across ' + res.count + ' logged days.';
+      note.textContent = 'No clear links between your numbers yet across ' + res.count + ' logged days.' + AT_MIDNIGHT;
     } else {
       res.links.forEach(function (l) {
         var row = el('div', 'link'), a = Math.abs(l.r);
@@ -1351,7 +1381,7 @@ details > .nuts{margin-top:10px}
         row.appendChild(meta);
         box.appendChild(row);
       });
-      note.textContent = 'Correlations across ' + res.count + ' logged days. With few days these swing a lot, and a link is a hint to test, not proof of cause.';
+      note.textContent = 'Correlations across ' + res.count + ' logged days. With few days these swing a lot, and a link is a hint to test, not proof of cause.' + AT_MIDNIGHT;
     }
     var realCount = Object.keys(S.days).filter(function (d) { return logged(S.days[d]); }).length;
     $('example-on').hidden = S.example || realCount >= 7;
@@ -1447,8 +1477,8 @@ details > .nuts{margin-top:10px}
 
     $('goals-reset').onclick = function () {
       var old = S.settings.goals;
-      S.settings.goals = {}; saveSettings();
-      toast('Goals reset to standard', function () { S.settings.goals = old; saveSettings(); });
+      S.settings.goals = {}; staleSnap(); saveSettings();
+      toast('Goals reset to standard', function () { S.settings.goals = old; staleSnap(); saveSettings(); });
     };
 
     // nutrient rows open and close their list of sources
@@ -1529,8 +1559,8 @@ details > .nuts{margin-top:10px}
           if (data.settings && typeof data.settings === 'object' && (data.settings.t || 0) > (S.settings.t || 0)) {
             S.settings = normSettings(data.settings); renderGoals(); renderPresets(); renderWeek();
           }
-          saveLocal(); renderAll();
-          note.textContent = n + (n === 1 ? ' day' : ' days') + ' restored. Newer entries already on this device were kept.';
+          staleSnap(); saveLocal(); renderAll();
+          note.textContent = n +(n === 1 ? ' day' : ' days') + ' restored. Newer entries already on this device were kept.';
         } catch (e) { note.textContent = 'That file is not an Even Keel backup.'; }
       };
       rd.readAsText(f);
