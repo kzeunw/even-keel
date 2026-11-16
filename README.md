@@ -9,7 +9,7 @@ A small daily journal that runs in your phone's browser. Each day you rate four 
 - **Exercise**: home workout, cardio, or both (leave it unselected for none)
 - **Piano**: practised or not
 
-You can also list what you ate. Each entry is sent to Google's Gemini, which estimates its nutrients, and the day's totals are shown against your daily goals, along with the potassium to sodium ratio (target 2.5 : 1).
+You can also list what you ate. Each entry is sent to Google's Gemini, which estimates its nutrients, and the day's totals are shown against your daily goals, along with the potassium to sodium ratio (target 2.5 : 1). Tap any nutrient to see which foods it mainly came from that day.
 
 The Patterns tab shows highlights (your logging streak, your best day, and this week's piano and exercise days), the last two weeks at a glance, and which of your numbers tend to move together.
 
