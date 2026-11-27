@@ -13,7 +13,7 @@ You can also list what you ate. Each entry is sent to Google's Gemini, which est
 
 Meals you eat often can be saved in the Settings tab. Each one shows as a button under the food box, and one tap adds it to the day. A saved meal is estimated the first time you add it and is instant after that.
 
-The Patterns tab shows highlights (your logging streak, your best day, and this week's piano and exercise days against your weekly targets), the last two weeks at a glance, the nutrients you are often short on or over, and which of your numbers tend to move together.
+The Patterns tab shows highlights (your logging streak, your best day, and this week's piano and exercise days against your weekly targets), the last two weeks at a glance, the nutrients you are often short on or over, and which of your numbers tend to move together, both on the same day and from one day to the next (for example, how you ate one day and how you slept that night).
 
 A vitamin or mineral is listed as often short when it stays under 75% of its goal on at least half of the days with a full food log. Saturated fat, added sugar and sodium are listed when they go over their limit that often. Days with under half the calorie goal logged are left out.
 
@@ -61,6 +61,11 @@ Google's models are sometimes overloaded and answer with a 503 error. When that 
 
 ## Daily goals
 
-Each nutrient has a standard daily goal taken from the FDA Daily Values. Open **Daily goals** in the Settings tab to set your own for any of them. Carbs, fat, saturated fat and added sugar follow your calorie goal unless you set them yourself.
+Each nutrient has a standard daily goal. **Standard goals** in the Settings tab picks where these come from:
+
+- **General: FDA Daily Values**, the single figures printed on US food labels. Several are set for the group that needs the most, so they run high for many adults (iron 18 mg, calcium 1,300 mg, phosphorus 1,250 mg, potassium 4,700 mg, vitamin D 20 µg).
+- **Men 19 to 50** or **Women 19 to 50**, the recommended intakes from the US National Academies.
+
+Every goal is an amount to get from food, drink and supplements. The vitamin D goal assumes little sun, which the app cannot track. You can also set your own goal for any nutrient. Carbs, fat, saturated fat and added sugar follow your calorie goal unless you set them yourself.
 
 Nutrient amounts are AI estimates from your description, not lab values.
