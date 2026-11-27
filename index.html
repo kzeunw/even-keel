@@ -313,7 +313,10 @@ details > .nuts{margin-top:10px}
           <label for="gem-model">Model
             <input id="gem-model" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
           </label>
-          <p class="hint">Create a key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. The key is stored only in this browser and sent only to Google. What you type into the food log is sent to Google for analysis.</p>
+          <label for="gem-backup">Backup model, used when the first one is overloaded
+            <input id="gem-backup" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+          </label>
+          <p class="hint">Create a key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. The key is stored only in this browser and sent only to Google. What you type into the food log is sent to Google for analysis. Leave the backup model empty to use only the first one.</p>
         </div>
       </section>
 
@@ -534,16 +537,20 @@ details > .nuts{margin-top:10px}
   /* ---------- Gemini settings, kept apart from the journal so a backup never carries the key ---------- */
   var GEM_KEY = 'dailyfive.gemini'; // the app's first name; kept so a key saved before the rename still loads
   var DEFAULT_MODEL = 'gemini-3.5-flash-lite';
-  var G = { key: '', model: DEFAULT_MODEL };
+  var DEFAULT_BACKUP = 'gemini-3.1-flash-lite'; // asked when the first model is overloaded; '' means no backup
+  var G = { key: '', model: DEFAULT_MODEL, backup: DEFAULT_BACKUP };
   function loadGemini() {
     try {
       var g = JSON.parse(localStorage.getItem(GEM_KEY) || 'null');
-      if (g) { G.key = String(g.key || ''); G.model = String(g.model || DEFAULT_MODEL); }
+      if (g) {
+        G.key = String(g.key || ''); G.model = String(g.model || DEFAULT_MODEL);
+        G.backup = typeof g.backup === 'string' ? g.backup : DEFAULT_BACKUP;
+      }
     } catch (e) { /* storage blocked */ }
   }
   function saveGemini() { try { localStorage.setItem(GEM_KEY, JSON.stringify(G)); } catch (e) { /* ignore */ } }
   function renderGemini() {
-    $('gem-key').value = G.key; $('gem-model').value = G.model;
+    $('gem-key').value = G.key; $('gem-model').value = G.model; $('gem-backup').value = G.backup;
     $('gem-summary').textContent = G.key ? 'key saved' : 'no key yet';
     $('food-note').textContent = G.key
       ? 'Add each meal as you go. Gemini estimates its nutrients and the totals below update.'
@@ -632,9 +639,9 @@ details > .nuts{margin-top:10px}
     key: 'Gemini rejected the API key. Check it in Settings.',
     model: 'Gemini does not know that model name. Check it in Settings.',
     quota: 'Gemini quota reached. Try again later.',
-    network: 'Could not reach Gemini. Try again when online.',
-    server: 'Gemini had a problem. Try again in a moment.',
-    timeout: 'Gemini did not answer in time.',
+    network: 'Could not reach Gemini. This entry will be tried again by itself when you are back online.',
+    server: 'Gemini is overloaded. This entry will be tried again by itself.',
+    timeout: 'Gemini did not answer in time. This entry will be tried again by itself.',
     refused: 'Gemini returned no estimate. Try rewording the entry.',
     invalid_json: 'The estimate came back garbled.'
   };
@@ -978,9 +985,9 @@ details > .nuts{margin-top:10px}
     if (a >= 0 && b > a) { try { return JSON.parse(text.slice(a, b + 1)); } catch (e2) { /* fall through */ } }
     throw { code: 'invalid_json' };
   }
-  var TRY_MS = 45000, TRIES = 3; // one attempt may take this long; slow or failing attempts are repeated
-  function askGemini(text) {
-    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(G.model || DEFAULT_MODEL) + ':generateContent';
+  var TRY_MS = 45000, ROUNDS = 3; // one attempt may take this long; a round asks the first model, then the backup
+  function askGemini(text, model) {
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent';
     var ctl = typeof AbortController === 'function' ? new AbortController() : null;
     var timer = setTimeout(function () { if (ctl) ctl.abort(); }, TRY_MS);
     var late = { code: 'timeout', detail: 'No answer after ' + TRY_MS / 1000 + ' seconds.' };
@@ -1019,19 +1026,53 @@ details > .nuts{margin-top:10px}
       throw e && e.name === 'AbortError' ? late : { code: 'network' };
     }).then(function (v) { clearTimeout(timer); return v; }, function (e) { clearTimeout(timer); throw e; });
   }
-  // A busy or silent Gemini usually answers on the next attempt, so those two cases repeat by themselves
+  // An overloaded or silent model often answers a little later, and another model may have room
+  // right now. So a round asks the chosen model and then the backup one, and rounds repeat after a
+  // growing pause. The error reported in the end is the chosen model's.
   var AGAIN = { server: 1, timeout: 1 };
-  function askWithRetry(text, onRetry) {
-    var n = 0;
+  function askWithRetry(text, onStatus) {
+    var main = G.model || DEFAULT_MODEL, backup = G.backup && G.backup !== main ? G.backup : '';
+    var round = 1, backupNote = '';
+    function fromBackup(mainErr) {
+      if (!backup) return Promise.reject(mainErr);
+      onStatus('Gemini is busy. Trying the backup model');
+      return askGemini(text, backup).catch(function (e) {
+        if (!e || !AGAIN[e.code]) { // this key cannot use the backup model: stop asking it, and say so
+          backupNote = ' The backup model ' + backup + ' did not work either' + (e && e.detail ? ' (' + e.detail + ')' : '') + '.';
+          backup = '';
+        }
+        throw mainErr;
+      });
+    }
     function go() {
-      n++;
-      return askGemini(text).catch(function (e) {
-        if (!e || !AGAIN[e.code] || n >= TRIES) throw e;
-        onRetry(n + 1);
-        return new Promise(function (r) { setTimeout(r, n * 2500); }).then(go);
+      return askGemini(text, main).catch(function (e) {
+        if (!e || !AGAIN[e.code]) throw e;
+        return fromBackup(e).catch(function (err) {
+          if (round >= ROUNDS) {
+            if (backupNote) err = { code: err.code, detail: (err.detail || '') + backupNote };
+            throw err;
+          }
+          round++;
+          onStatus('Gemini is busy. Attempt ' + round + ' of ' + ROUNDS);
+          return new Promise(function (r) { setTimeout(r, (round - 1) * 4000); }).then(go);
+        });
       });
     }
     return go();
+  }
+  // Failures that pass by themselves. The entry stays queued (p) and is tried again without being
+  // asked: after the pauses below while the app is open, and whenever the app is opened, comes back
+  // to the front or comes back online.
+  var LATER = { server: 1, timeout: 1, network: 1 };
+  var LATER_S = [60, 120, 300, 600, 600, 600], laterN = {};
+  function tryLater(date, id) {
+    var n = laterN[id] || 0;
+    if (n >= LATER_S.length) return; // enough for this visit
+    laterN[id] = n + 1;
+    setTimeout(function () {
+      var m = findMeal(date, id);
+      if (m && m.p && !m.n) analyse(date, id);
+    }, LATER_S[n] * 1000);
   }
   // note: what to show while it runs, when that is not a first estimate. Returns a promise that
   // settles when the attempt is over, or null when none was started.
@@ -1039,28 +1080,30 @@ details > .nuts{margin-top:10px}
     var meal = findMeal(date, id); if (!meal || busy[id]) return null;
     if (!G.key) { errs[id] = 'nokey'; if (S.date === date) renderMeals(); return null; }
     busy[id] = note || true; delete errs[id]; delete errNote[id];
-    meal.p = 1; saveLocal(); // marks the estimate as under way, so a reload picks it up again
+    if (!meal.n) { meal.p = 1; saveLocal(); } // queued, so a reload or a later try picks it up again
     if (S.date === date) renderMeals();
-    return askWithRetry(meal.text, function (n) {
-      busy[id] = 'Gemini is slow to answer. Attempt ' + n + ' of ' + TRIES;
+    return askWithRetry(meal.text, function (status) {
+      busy[id] = status;
       if (S.date === date) renderMeals();
     }).then(function (out) {
       var res = cleanResult(out), m = findMeal(date, id);
       if (!m) return;
-      delete m.p;
+      delete m.p; delete laterN[id];
       if (!res) { errs[id] = 'nofood'; saveLocal(); return; }
       setEstimate(date, m, res);
     }).catch(function (e) {
-      var m = findMeal(date, id);
-      if (m) { delete m.p; saveLocal(); }
-      errs[id] = e && e.code || 'failed';
+      var m = findMeal(date, id), code = e && e.code || 'failed';
+      errs[id] = code;
       if (e && e.detail) errNote[id] = e.detail;
+      if (!m) return;
+      if (LATER[code] && !m.n) tryLater(date, id); // stays queued
+      else { delete m.p; saveLocal(); }
     }).then(function () {
       delete busy[id];
       if (S.date === date) { renderMeals(); renderNutrients(); }
     });
   }
-  // An estimate that was still under way when the page was closed or reloaded starts again
+  // Queued entries start again: ones still under way when the page was closed, and ones Gemini was too busy for
   function resumePending() {
     if (!G.key) return;
     Object.keys(S.days).forEach(function (date) {
@@ -1529,6 +1572,10 @@ details > .nuts{margin-top:10px}
       Object.keys(errs).forEach(function (k) { if (errs[k] === 'model') delete errs[k]; });
       renderMeals();
     };
+    $('gem-backup').onchange = function () { G.backup = this.value.trim(); saveGemini(); renderGemini(); };
+    // coming back to the app, or back online, is a good moment to try the queued entries
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') resumePending(); });
+    window.addEventListener('online', resumePending);
 
     $('backup').onclick = function () {
       var json = JSON.stringify({ app: 'even-keel', days: S.days, settings: S.settings }, null, 1);

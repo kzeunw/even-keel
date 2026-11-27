@@ -49,6 +49,8 @@ There is nothing to install or build.
 
 The model name next to the key can be changed if Google retires the default one.
 
+Google's models are sometimes overloaded and answer with a 503 error. When that happens the app asks the backup model named in Settings, and repeats both a few times. If neither answers, the entry stays saved and is tried again by itself: after a minute, then at growing intervals while the app is open, and whenever you open the app or come back to it.
+
 ## Where your data lives
 
 - Your journal is stored only in the browser you use, on that device. Nothing is sent to GitHub.
